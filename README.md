@@ -25,7 +25,7 @@ macOS menü barında bir sonraki namaz vaktine kalan süreyi gösteren sade bir 
 
 [Releases](https://github.com/fatihtemiz/namaz-vakti-menubar/releases) sayfasından son DMG'yi indirin ve uygulamayı **Applications** klasörüne sürükleyin.
 
-Uygulama Apple Developer ID ile imzalı ve notarize edilmiş değil, bu yüzden macOS ilk açılışı engeller. Bir kez izin vermeniz yeterli: **Sistem Ayarları → Gizlilik ve Güvenlik → Yine de Aç**.
+Uygulama Developer ID ile imzalı ve Apple tarafından notarize edilmiştir; açılırken güvenlik uyarısı çıkmaz.
 
 ### Kaynaktan derleme
 
@@ -109,7 +109,7 @@ Asr: 1:23
 - Monthly times are cached on disk, so the countdown keeps working offline
 - No account, no sign-up, no API key
 
-**Install:** download the DMG from [Releases](https://github.com/fatihtemiz/namaz-vakti-menubar/releases) and drag the app into Applications. The app is not notarized, so macOS blocks the first launch; allow it once in **System Settings → Privacy & Security → Open Anyway**.
+**Install:** download the DMG from [Releases](https://github.com/fatihtemiz/namaz-vakti-menubar/releases) and drag the app into Applications. The app is signed with a Developer ID and notarized by Apple, so it opens without security warnings.
 
 **Build from source** (macOS 14+, Swift 6):
 
