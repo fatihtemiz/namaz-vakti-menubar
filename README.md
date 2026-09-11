@@ -7,6 +7,7 @@ macOS menü barında **bir sonraki namaz vaktine kalan süreyi** canlı geri say
 - Menü barında `🌙 İkindi 1:23:45` gibi sıradaki vakit + geri sayım
 - Tıklayınca bugünün tüm vakitleri (İmsak, Güneş, Öğle, İkindi, Akşam, Yatsı), sıradaki vurgulu
 - Ayarlardan **ülke → şehir → ilçe** seçimi (API'den canlı gelir)
+- **Türkçe / English** arayüz: Ayarlar'daki Dil bölümünden seçilir, varsayılan Türkçe. İngilizcede vakit adları Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha olur; yer adları API'nin İngilizce karşılıklarıyla gösterilir.
 - Aylık vakitler **diske cache**'lenir; internetsizken de geri sayım çalışır
 - Dock ikonu yok (menü bar agent'ı, `LSUIElement`)
 
@@ -39,7 +40,8 @@ Geliştirme sırasında hızlı çalıştırmak için: `swift run`
 | `EzanVaktiAPI.swift` | EzanVakti REST istemcisi (auth yok) |
 | `Models.swift` | API modelleri + diske cache modeli |
 | `ContentView.swift` | Menü bar açılır paneli |
-| `SettingsView.swift` | Ülke/şehir/ilçe seçimi |
+| `SettingsView.swift` | Dil ve ülke/şehir/ilçe seçimi |
+| `Localization.swift` | `AppLanguage` + `loc("Türkçe", "English")` yardımcısı |
 
 ### API uçları (hepsi GET, kimlik doğrulama yok)
 

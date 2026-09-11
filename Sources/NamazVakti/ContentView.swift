@@ -9,13 +9,13 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 12) {
             // Başlık: şehir + sıradaki vakit
             VStack(alignment: .leading, spacing: 2) {
-                Text(manager.cityName.isEmpty ? "Namaz Vakti" : manager.cityName)
+                Text(manager.displayCityName.isEmpty ? loc("Namaz Vakti", "Prayer Times") : manager.displayCityName)
                     .font(.headline)
                 if !manager.nextName.isEmpty {
-                    Text("Sıradaki: \(manager.nextName) — \(manager.nextTime)")
+                    Text(loc("Sıradaki: ", "Next: ") + "\(manager.nextName) — \(manager.nextTime)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    Text(manager.remaining + " kaldı")
+                    Text(loc("\(manager.remaining) kaldı", "\(manager.remaining) left"))
                         .font(.system(.title2, design: .rounded).monospacedDigit())
                         .foregroundStyle(.primary)
                 }
@@ -46,7 +46,7 @@ struct ContentView: View {
 
             Divider()
 
-            Toggle("Vakit adlarını kısalt", isOn: $manager.useAbbreviations)
+            Toggle(loc("Vakit adlarını kısalt", "Abbreviate prayer names"), isOn: $manager.useAbbreviations)
                 .toggleStyle(.switch)
                 .controlSize(.small)
                 .font(.callout)
@@ -55,7 +55,7 @@ struct ContentView: View {
                 Button {
                     Task { await manager.refresh() }
                 } label: {
-                    Label("Yenile", systemImage: "arrow.clockwise")
+                    Label(loc("Yenile", "Refresh"), systemImage: "arrow.clockwise")
                 }
                 .disabled(manager.isLoading)
 
@@ -65,13 +65,13 @@ struct ContentView: View {
                     openSettings()
                     NSApp.activate(ignoringOtherApps: true)
                 } label: {
-                    Label("Ayarlar", systemImage: "gearshape")
+                    Label(loc("Ayarlar", "Settings"), systemImage: "gearshape")
                 }
 
                 Button {
                     NSApp.terminate(nil)
                 } label: {
-                    Label("Çık", systemImage: "power")
+                    Label(loc("Çık", "Quit"), systemImage: "power")
                 }
             }
             .buttonStyle(.plain)

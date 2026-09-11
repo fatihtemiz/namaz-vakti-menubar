@@ -6,22 +6,23 @@ final class PrayerTimesManager: ObservableObject {
     // Ayarlar — seçilen ilçe
     @AppStorage("cityId") var cityId: Int = 0
     @AppStorage("cityName") var cityName: String = ""
+    @AppStorage("cityNameEn") var cityNameEn: String = ""
     // Vakit adlarını kısaltarak göster (ör. "İkindi" → "İkn")
     @AppStorage("useAbbreviations") var useAbbreviations: Bool = false {
         didSet { recompute() }
     }
+    // Arayüz dili (Türkçe / English)
+    @AppStorage(AppLanguage.storageKey) var language: AppLanguage = .tr {
+        didSet { recompute() }
+    }
 
-    static let abbreviations: [String: String] = [
-        "İmsak": "İms", "Güneş": "Gün", "Öğle": "Öğl",
-        "İkindi": "İkn", "Akşam": "Akş", "Yatsı": "Yat",
-    ]
-
-    private func displayName(_ name: String) -> String {
-        useAbbreviations ? (Self.abbreviations[name] ?? name) : name
+    /// Seçili dile göre kayıtlı ilçe adı.
+    var displayCityName: String {
+        language == .en && !cityNameEn.isEmpty ? cityNameEn : cityName
     }
 
     // Menü barında görünen kısa metin, ör. "İkindi 1:23:45"
-    @Published var menuTitle: String = "Namaz Vakti"
+    @Published var menuTitle: String = loc("Namaz Vakti", "Prayer Times")
     // Popover durumu
     @Published var nextName: String = ""
     @Published var nextTime: String = ""
@@ -58,7 +59,7 @@ final class PrayerTimesManager: ObservableObject {
     /// Cache yarını kapsamıyorsa veya şehir değiştiyse yeniden çek.
     func ensureFreshData() async {
         guard isConfigured else {
-            if menuTitle == "Namaz Vakti" { menuTitle = "Ayarla…" }
+            recompute()   // menü barında "Ayarla…" göster
             return
         }
         let cal = Calendar.current
@@ -74,11 +75,11 @@ final class PrayerTimesManager: ObservableObject {
     /// API'den ayı çek ve cache'le.
     func refresh() async {
         guard isConfigured else {
-            status = "Önce ayarlardan şehir/ilçe seçin."
+            status = loc("Önce ayarlardan şehir/ilçe seçin.", "Choose a city/district in Settings first.")
             return
         }
         isLoading = true
-        status = "Vakitler alınıyor…"
+        status = loc("Vakitler alınıyor…", "Fetching prayer times…")
         defer { isLoading = false }
         do {
             let days = try await api.prayerTimes(districtId: cityId)
@@ -93,7 +94,7 @@ final class PrayerTimesManager: ObservableObject {
             status = ""
             recompute()
         } catch {
-            status = "Hata: \(error.localizedDescription)"
+            status = loc("Hata: ", "Error: ") + error.localizedDescription
         }
     }
 
@@ -103,9 +104,9 @@ final class PrayerTimesManager: ObservableObject {
         guard let cache, !cache.days.isEmpty else {
             todayRows = []
             if isConfigured {
-                menuTitle = isLoading ? "Yükleniyor…" : "Namaz Vakti"
+                menuTitle = isLoading ? loc("Yükleniyor…", "Loading…") : loc("Namaz Vakti", "Prayer Times")
             } else {
-                menuTitle = "Ayarla…"
+                menuTitle = loc("Ayarla…", "Set up…")
             }
             return
         }
@@ -114,33 +115,34 @@ final class PrayerTimesManager: ObservableObject {
         let cal = Calendar.current
 
         // Tüm günlerin tüm vakitlerini tam Date olarak düzleştir.
-        var events: [(name: String, date: Date)] = []
+        var events: [(prayer: Prayer, date: Date)] = []
         for day in cache.days {
             guard let base = day.day else { continue }
             for v in day.vakitler {
                 if let d = Self.combine(day: base, time: v.time, calendar: cal) {
-                    events.append((v.name, d))
+                    events.append((v.prayer, d))
                 }
             }
         }
         events.sort { $0.date < $1.date }
 
         guard let next = events.first(where: { $0.date > now }) else {
-            menuTitle = cache.cityName.isEmpty ? "Namaz Vakti" : cache.cityName
+            menuTitle = displayCityName.isEmpty ? loc("Namaz Vakti", "Prayer Times") : displayCityName
             return
         }
 
-        nextName = displayName(next.name)
+        nextName = next.prayer.name(abbreviated: useAbbreviations)
         nextTime = Self.hhmm.string(from: next.date)
         let interval = next.date.timeIntervalSince(now)
         remaining = Self.formatRemaining(interval)
-        menuTitle = "\(displayName(next.name)): \(remaining)"
+        menuTitle = "\(nextName): \(remaining)"
 
         // Bugünün satırları — sıradaki vakti işaretle.
         let today = cal.startOfDay(for: now)
         if let todayDay = cache.days.first(where: { $0.day.map { cal.startOfDay(for: $0) } == today }) {
             todayRows = todayDay.vakitler.map { v in
-                (displayName(v.name), v.time, v.name == next.name && cal.isDate(next.date, inSameDayAs: now))
+                (v.prayer.name(abbreviated: useAbbreviations), v.time,
+                 v.prayer == next.prayer && cal.isDate(next.date, inSameDayAs: now))
             }
         }
     }

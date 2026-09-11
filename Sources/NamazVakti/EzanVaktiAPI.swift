@@ -6,8 +6,8 @@ enum APIError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .http(let code): return "Sunucu hatası (HTTP \(code))"
-        case .emptyData: return "Sunucudan boş cevap geldi"
+        case .http(let code): return loc("Sunucu hatası (HTTP \(code))", "Server error (HTTP \(code))")
+        case .emptyData: return loc("Sunucudan boş cevap geldi", "Server returned an empty response")
         }
     }
 }

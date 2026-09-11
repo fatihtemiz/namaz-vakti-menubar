@@ -5,6 +5,12 @@ import Foundation
 struct Place: Decodable, Identifiable, Hashable {
     let id: Int
     let name: String
+    let nameEn: String?
+
+    /// Seçili dile göre ad ("HOLLANDA" / "NETHERLANDS").
+    var displayName: String {
+        AppLanguage.current == .en ? (nameEn ?? name) : name
+    }
 
     private struct DynamicKey: CodingKey {
         var stringValue: String
@@ -17,12 +23,15 @@ struct Place: Decodable, Identifiable, Hashable {
         let c = try decoder.container(keyedBy: DynamicKey.self)
         var foundId: Int?
         var foundName: String?
+        var foundNameEn: String?
         for key in c.allKeys {
             let k = key.stringValue
             if k.hasSuffix("ID") {
                 if let s = try? c.decode(String.self, forKey: key), let v = Int(s) { foundId = v }
                 else if let v = try? c.decode(Int.self, forKey: key) { foundId = v }
-            } else if k.hasSuffix("Adi") {            // "UlkeAdi" evet, "UlkeAdiEn" hayır
+            } else if k.hasSuffix("AdiEn") {          // "UlkeAdiEn"
+                foundNameEn = try? c.decode(String.self, forKey: key)
+            } else if k.hasSuffix("Adi") {            // "UlkeAdi"
                 foundName = try? c.decode(String.self, forKey: key)
             }
         }
@@ -32,6 +41,7 @@ struct Place: Decodable, Identifiable, Hashable {
         }
         self.id = id
         self.name = name
+        self.nameEn = (foundNameEn?.isEmpty ?? true) ? nil : foundNameEn
     }
 }
 
@@ -80,6 +90,24 @@ struct PrayerDay: Decodable {
     }
 }
 
+// MARK: - Vakitler
+
+enum Prayer: CaseIterable {
+    case imsak, gunes, ogle, ikindi, aksam, yatsi
+
+    /// Seçili dile göre tam ya da kısaltılmış vakit adı (ör. "İkindi"/"İkn", "Asr"/"Asr").
+    func name(abbreviated: Bool) -> String {
+        switch self {
+        case .imsak:  return abbreviated ? loc("İms", "Fjr") : loc("İmsak", "Fajr")
+        case .gunes:  return abbreviated ? loc("Gün", "Sun") : loc("Güneş", "Sunrise")
+        case .ogle:   return abbreviated ? loc("Öğl", "Dhr") : loc("Öğle", "Dhuhr")
+        case .ikindi: return abbreviated ? loc("İkn", "Asr") : loc("İkindi", "Asr")
+        case .aksam:  return abbreviated ? loc("Akş", "Mgh") : loc("Akşam", "Maghrib")
+        case .yatsi:  return abbreviated ? loc("Yat", "Ish") : loc("Yatsı", "Isha")
+        }
+    }
+}
+
 // MARK: - Disk cache
 
 struct CachedTimes: Codable {
@@ -98,14 +126,14 @@ struct CachedDay: Codable {
     var aksam: String
     var yatsi: String
 
-    var vakitler: [(name: String, time: String)] {
+    var vakitler: [(prayer: Prayer, time: String)] {
         [
-            ("İmsak", imsak),
-            ("Güneş", gunes),
-            ("Öğle", ogle),
-            ("İkindi", ikindi),
-            ("Akşam", aksam),
-            ("Yatsı", yatsi),
+            (.imsak, imsak),
+            (.gunes, gunes),
+            (.ogle, ogle),
+            (.ikindi, ikindi),
+            (.aksam, aksam),
+            (.yatsi, yatsi),
         ]
     }
 
