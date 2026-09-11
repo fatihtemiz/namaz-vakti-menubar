@@ -3,18 +3,18 @@
 macOS menü barında bir sonraki namaz vaktine kalan süreyi gösteren sade bir uygulama. Pencere yok, Dock ikonu yok, bildirim yok. Menü barında sadece şu var:
 
 ```
-İkindi: 1:23:45
+İkindi: 1:23
 ```
 
 *English below.*
 
 ## Özellikler
 
-- Menü barında sıradaki vakit ve canlı geri sayım
-- Tıklayınca günün tüm vakitleri (İmsak, Güneş, Öğle, İkindi, Akşam, Yatsı), sıradaki vurgulu
+- Menü barında sıradaki vakit ve kalan süre (saat:dakika, dakikada bir güncellenir; saniye akmaz)
+- Tıklayınca saniyeli geri sayım ve günün tüm vakitleri (İmsak, Güneş, Öğle, İkindi, Akşam, Yatsı), sıradaki vurgulu
 - **Ülke → şehir → ilçe** seçimi (Diyanet verisi)
 - **Türkçe / English** arayüz
-- İsteğe bağlı kısaltılmış vakit adları (`İkn: 1:23:45`)
+- İsteğe bağlı kısaltılmış vakit adları (`İkn: 1:23`)
 - Girişte başlat
 - Aylık vakitler diske kaydedilir, internet yokken de geri sayım çalışır
 - Hesap, kayıt, API anahtarı yok
@@ -86,11 +86,11 @@ MIT, bkz. [LICENSE](LICENSE).
 A minimal macOS menu bar app that shows the time left until the next prayer. No window, no Dock icon, no notifications. Just this in your menu bar:
 
 ```
-Asr: 1:23:45
+Asr: 1:23
 ```
 
-- Next prayer and a live countdown in the menu bar
-- Click it for today's full schedule, with the next prayer highlighted
+- Next prayer and time left in the menu bar (hours:minutes, updated once a minute; no ticking seconds)
+- Click it for a to-the-second countdown and today's full schedule, with the next prayer highlighted
 - Country → city → district picker, using official Diyanet (Presidency of Religious Affairs, Türkiye) times
 - Turkish / English interface (Settings → General)
 - Optional abbreviated names, launch at login

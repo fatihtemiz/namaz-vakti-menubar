@@ -135,7 +135,9 @@ final class PrayerTimesManager: ObservableObject {
         nextTime = Self.hhmm.string(from: next.date)
         let interval = next.date.timeIntervalSince(now)
         remaining = Self.formatRemaining(interval)
-        menuTitle = "\(nextName): \(remaining)"
+        // Menü barı sade kalsın: saniye akmaz, sadece dakika değişince güncellenir.
+        let barTitle = "\(nextName): \(Self.formatBar(interval))"
+        if menuTitle != barTitle { menuTitle = barTitle }
 
         // Bugünün satırları — sıradaki vakti işaretle.
         let today = cal.startOfDay(for: now)
@@ -167,6 +169,12 @@ final class PrayerTimesManager: ObservableObject {
             return String(format: "%d:%02d:%02d", h, m, s)
         }
         return String(format: "%02d:%02d", m, s)
+    }
+
+    /// Menü barı için saat:dakika. Yukarı yuvarlanır, son dakikada "0:00" yerine "0:01" görünür.
+    private static func formatBar(_ interval: TimeInterval) -> String {
+        let minutes = max(0, Int((interval / 60).rounded(.up)))
+        return String(format: "%d:%02d", minutes / 60, minutes % 60)
     }
 
     private static let hhmm: DateFormatter = {
