@@ -46,15 +46,15 @@ struct ContentView: View {
 
             Divider()
 
-            Toggle(loc("Saniyeleri göster", "Show seconds"), isOn: $manager.showSeconds)
-                .toggleStyle(.switch)
-                .controlSize(.small)
-                .font(.callout)
-
-            Toggle(loc("Vakit adlarını kısalt", "Abbreviate prayer names"), isOn: $manager.useAbbreviations)
-                .toggleStyle(.switch)
-                .controlSize(.small)
-                .font(.callout)
+            HStack(spacing: 12) {
+                Toggle(loc("Saniyeler", "Seconds"), isOn: $manager.showSeconds)
+                Spacer(minLength: 0)
+                Toggle(loc("Kısa adlar", "Short names"), isOn: $manager.useAbbreviations)
+            }
+            .toggleStyle(.switch)
+            .controlSize(.small)
+            .font(.callout)
+            .lineLimit(1)
 
             HStack {
                 Button {
@@ -83,6 +83,6 @@ struct ContentView: View {
             .labelStyle(.titleAndIcon)
         }
         .padding(14)
-        .frame(width: 260)
+        .frame(width: 280)
     }
 }
