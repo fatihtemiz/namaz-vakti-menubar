@@ -6,6 +6,8 @@ macOS menü barında bir sonraki namaz vaktine kalan süreyi gösteren sade bir 
 İkindi: 1:23:45
 ```
 
+![Menü barında Namaz Vakti](docs/menubar.png)
+
 *English below.*
 
 ## Özellikler
@@ -101,6 +103,8 @@ A minimal macOS menu bar app that shows the time left until the next prayer. No 
 ```
 Asr: 1:23:45
 ```
+
+![Namaz Vakti in the menu bar](docs/menubar.png)
 
 - Next prayer and a live countdown in the menu bar (`Asr: 1:23:45`)
 - Seconds can be turned off: it then shows hours:minutes (`Asr: 1:23`), with seconds only in the last 5 minutes (`0:04:59`)
