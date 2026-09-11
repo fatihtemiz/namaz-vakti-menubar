@@ -10,7 +10,7 @@ macOS menü barında bir sonraki namaz vaktine kalan süreyi gösteren sade bir 
 
 ## Özellikler
 
-- Menü barında sıradaki vakit ve kalan süre (saat:dakika, dakikada bir güncellenir; saniye akmaz)
+- Menü barında sıradaki vakit ve kalan süre (saat:dakika, dakikada bir güncellenir; son 5 dakikada saniye de akar: `0:04:59`)
 - Tıklayınca saniyeli geri sayım ve günün tüm vakitleri (İmsak, Güneş, Öğle, İkindi, Akşam, Yatsı), sıradaki vurgulu
 - **Ülke → şehir → ilçe** seçimi (Diyanet verisi)
 - **Türkçe / English** arayüz
@@ -89,7 +89,7 @@ A minimal macOS menu bar app that shows the time left until the next prayer. No 
 Asr: 1:23
 ```
 
-- Next prayer and time left in the menu bar (hours:minutes, updated once a minute; no ticking seconds)
+- Next prayer and time left in the menu bar (hours:minutes, updated once a minute; seconds tick only in the last 5 minutes: `0:04:59`)
 - Click it for a to-the-second countdown and today's full schedule, with the next prayer highlighted
 - Country → city → district picker, using official Diyanet (Presidency of Religious Affairs, Türkiye) times
 - Turkish / English interface (Settings → General)

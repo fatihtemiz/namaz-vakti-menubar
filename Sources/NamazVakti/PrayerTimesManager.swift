@@ -171,9 +171,14 @@ final class PrayerTimesManager: ObservableObject {
         return String(format: "%02d:%02d", m, s)
     }
 
-    /// Menü barı için saat:dakika. Yukarı yuvarlanır, son dakikada "0:00" yerine "0:01" görünür.
+    /// Menü barı için saat:dakika; son 5 dakikada saniye de akar ("0:04:59").
+    /// Yukarı yuvarlanır, böylece "0:00" hiç görünmez.
     private static func formatBar(_ interval: TimeInterval) -> String {
-        let minutes = max(0, Int((interval / 60).rounded(.up)))
+        let seconds = max(0, Int(interval.rounded(.up)))
+        if seconds <= 5 * 60 {
+            return String(format: "0:%02d:%02d", seconds / 60, seconds % 60)
+        }
+        let minutes = Int((interval / 60).rounded(.up))
         return String(format: "%d:%02d", minutes / 60, minutes % 60)
     }
 

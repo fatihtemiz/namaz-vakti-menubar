@@ -6,7 +6,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 APP_NAME="NamazVakti"
-VERSION="1.3"
+VERSION="1.4"
 BUILD_DIR=".build/release"
 APP_BUNDLE="$APP_NAME.app"
 ICON="Resources/AppIcon.icns"
