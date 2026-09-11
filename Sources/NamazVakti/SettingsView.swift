@@ -1,4 +1,5 @@
 import SwiftUI
+import ServiceManagement
 
 struct SettingsView: View {
     @EnvironmentObject var manager: PrayerTimesManager
@@ -13,16 +14,20 @@ struct SettingsView: View {
 
     @State private var busy = false
     @State private var message = ""
+    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     private let api = EzanVaktiAPI()
 
     var body: some View {
         Form {
-            Section(loc("Dil", "Language")) {
+            Section(loc("Genel", "General")) {
                 Picker(loc("Arayüz dili", "Interface language"), selection: $manager.language) {
                     ForEach(AppLanguage.allCases) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
+
+                Toggle(loc("Girişte başlat", "Launch at login"), isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { _, on in setLaunchAtLogin(on) }
             }
 
             Section(loc("Konum Seçimi", "Location")) {
@@ -72,7 +77,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 380, height: 470)
+        .frame(width: 380, height: 510)
         .task { await loadCountries() }
     }
 
@@ -99,6 +104,21 @@ struct SettingsView: View {
         busy = true; defer { busy = false }
         do { districts = try await api.districts(cityId: cityId) }
         catch { message = loc("İlçeler alınamadı: ", "Couldn't load districts: ") + error.localizedDescription }
+    }
+
+    /// Uygulamayı macOS giriş öğelerine ekler/çıkarır.
+    private func setLaunchAtLogin(_ on: Bool) {
+        let service = SMAppService.mainApp
+        do {
+            if on { try service.register() } else { try service.unregister() }
+            if service.status == .requiresApproval {
+                message = loc("Sistem Ayarları > Genel > Giriş Öğeleri'nden onaylayın.",
+                              "Approve it in System Settings > General > Login Items.")
+            }
+        } catch {
+            message = loc("Giriş öğesi ayarlanamadı: ", "Couldn't update login item: ") + error.localizedDescription
+            launchAtLogin = service.status == .enabled
+        }
     }
 
     private func save() {

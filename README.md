@@ -10,20 +10,22 @@ macOS menü barında **bir sonraki namaz vaktine kalan süreyi** canlı geri say
 - **Türkçe / English** arayüz: Ayarlar'daki Dil bölümünden seçilir, varsayılan Türkçe. İngilizcede vakit adları Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha olur; yer adları API'nin İngilizce karşılıklarıyla gösterilir.
 - Aylık vakitler **diske cache**'lenir; internetsizken de geri sayım çalışır
 - Dock ikonu yok (menü bar agent'ı, `LSUIElement`)
+- Ayarlardan **Girişte başlat** (macOS giriş öğesi, `SMAppService`)
+- Kendi ikonu var (gece mavisi zemin, altın hilal). İkon `Scripts/make_icon.swift` ile kodla çizilir.
 
 ## Derleme & Çalıştırma
 
 ```bash
 cd ~/Desktop/NamazVaktiMenuBar
-./build_app.sh          # NamazVakti.app üretir
-open NamazVakti.app     # menü barında başlatır
+./build_app.sh            # NamazVakti.app + dist/NamazVakti-<sürüm>.dmg üretir
+./build_app.sh install    # ayrıca ~/Applications'a kurar ve yeniden başlatır
 ```
 
 Geliştirme sırasında hızlı çalıştırmak için: `swift run`
 
-### Girişte otomatik başlatma (opsiyonel)
+### Başkalarıyla paylaşma
 
-`NamazVakti.app`'i `~/Applications` altına taşıyıp **Sistem Ayarları → Genel → Giriş Öğeleri**'ne ekleyin.
+`dist/` altındaki DMG'yi gönderin. Açan kişi uygulamayı **Applications** klasörüne sürükler. Uygulama Developer ID ile imzalı ve notarize edilmiş olmadığı için ilk açılışta macOS engeller: **Sistem Ayarları → Gizlilik ve Güvenlik → "Yine de Aç"** ile bir kez izin verilir.
 
 ## Kullanım
 
