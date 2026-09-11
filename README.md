@@ -8,6 +8,11 @@ macOS menü barında bir sonraki namaz vaktine kalan süreyi gösteren sade bir 
 
 ![Menü barında Namaz Vakti](docs/menubar.png)
 
+Tıklayınca açılan panel:
+
+<img src="docs/panel.png" width="320" alt="Namaz Vakti açılır paneli: sıradaki vakit, kalan süre ve günün vakitleri">
+
+
 *English below.*
 
 ## Özellikler
@@ -105,6 +110,9 @@ Asr: 1:23:45
 ```
 
 ![Namaz Vakti in the menu bar](docs/menubar.png)
+
+<img src="docs/panel.png" width="320" alt="Namaz Vakti dropdown: next prayer, time left and today's schedule">
+
 
 - Next prayer and a live countdown in the menu bar (`Asr: 1:23:45`)
 - Seconds can be turned off: it then shows hours:minutes (`Asr: 1:23`), with seconds only in the last 5 minutes (`0:04:59`)
