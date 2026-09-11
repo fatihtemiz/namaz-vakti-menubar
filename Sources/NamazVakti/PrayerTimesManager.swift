@@ -11,6 +11,10 @@ final class PrayerTimesManager: ObservableObject {
     @AppStorage("useAbbreviations") var useAbbreviations: Bool = false {
         didSet { recompute() }
     }
+    // Menü barında saniyeleri göster (kapalıyken saat:dakika, son 5 dakikada yine saniye)
+    @AppStorage("showSeconds") var showSeconds: Bool = true {
+        didSet { recompute() }
+    }
     // Arayüz dili (Türkçe / English)
     @AppStorage(AppLanguage.storageKey) var language: AppLanguage = .tr {
         didSet { recompute() }
@@ -135,8 +139,8 @@ final class PrayerTimesManager: ObservableObject {
         nextTime = Self.hhmm.string(from: next.date)
         let interval = next.date.timeIntervalSince(now)
         remaining = Self.formatRemaining(interval)
-        // Menü barı sade kalsın: saniye akmaz, sadece dakika değişince güncellenir.
-        let barTitle = "\(nextName): \(Self.formatBar(interval))"
+        // Saniyeler kapalıysa bar sadece dakika değişince güncellenir.
+        let barTitle = "\(nextName): \(Self.formatBar(interval, withSeconds: showSeconds))"
         if menuTitle != barTitle { menuTitle = barTitle }
 
         // Bugünün satırları — sıradaki vakti işaretle.
@@ -171,12 +175,12 @@ final class PrayerTimesManager: ObservableObject {
         return String(format: "%02d:%02d", m, s)
     }
 
-    /// Menü barı için saat:dakika; son 5 dakikada saniye de akar ("0:04:59").
+    /// Menü barı metni: saniyeler açıksa "1:23:45"; kapalıysa "1:23", son 5 dakikada yine "0:04:59".
     /// Yukarı yuvarlanır, böylece "0:00" hiç görünmez.
-    private static func formatBar(_ interval: TimeInterval) -> String {
+    private static func formatBar(_ interval: TimeInterval, withSeconds: Bool) -> String {
         let seconds = max(0, Int(interval.rounded(.up)))
-        if seconds <= 5 * 60 {
-            return String(format: "0:%02d:%02d", seconds / 60, seconds % 60)
+        if withSeconds || seconds <= 5 * 60 {
+            return String(format: "%d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, seconds % 60)
         }
         let minutes = Int((interval / 60).rounded(.up))
         return String(format: "%d:%02d", minutes / 60, minutes % 60)

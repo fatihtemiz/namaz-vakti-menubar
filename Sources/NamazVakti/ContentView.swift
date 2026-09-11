@@ -46,6 +46,11 @@ struct ContentView: View {
 
             Divider()
 
+            Toggle(loc("Saniyeleri göster", "Show seconds"), isOn: $manager.showSeconds)
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .font(.callout)
+
             Toggle(loc("Vakit adlarını kısalt", "Abbreviate prayer names"), isOn: $manager.useAbbreviations)
                 .toggleStyle(.switch)
                 .controlSize(.small)
