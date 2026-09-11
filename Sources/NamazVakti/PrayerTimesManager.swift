@@ -32,6 +32,8 @@ final class PrayerTimesManager: ObservableObject {
     @Published var nextTime: String = ""
     @Published var remaining: String = ""
     @Published var todayRows: [(name: String, time: String, isNext: Bool)] = []
+    // Yatsı'dan sonra liste yarının vakitlerini gösterir
+    @Published var listIsTomorrow: Bool = false
     @Published var status: String = ""
     @Published var isLoading: Bool = false
 
@@ -143,12 +145,12 @@ final class PrayerTimesManager: ObservableObject {
         let barTitle = "\(nextName): \(Self.formatBar(interval, withSeconds: showSeconds))"
         if menuTitle != barTitle { menuTitle = barTitle }
 
-        // Bugünün satırları — sıradaki vakti işaretle.
-        let today = cal.startOfDay(for: now)
-        if let todayDay = cache.days.first(where: { $0.day.map { cal.startOfDay(for: $0) } == today }) {
-            todayRows = todayDay.vakitler.map { v in
-                (v.prayer.name(abbreviated: useAbbreviations), v.time,
-                 v.prayer == next.prayer && cal.isDate(next.date, inSameDayAs: now))
+        // Liste sıradaki vaktin gününü gösterir (Yatsı'dan sonra yarın); sıradaki vakit işaretlenir.
+        let listDay = cal.startOfDay(for: next.date)
+        listIsTomorrow = !cal.isDate(listDay, inSameDayAs: now)
+        if let day = cache.days.first(where: { $0.day.map { cal.startOfDay(for: $0) } == listDay }) {
+            todayRows = day.vakitler.map { v in
+                (v.prayer.name(abbreviated: useAbbreviations), v.time, v.prayer == next.prayer)
             }
         }
     }

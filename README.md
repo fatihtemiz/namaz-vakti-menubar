@@ -19,7 +19,7 @@ Tıklayınca açılan panel:
 
 - Menü barında sıradaki vakit ve saniyeli geri sayım (`İkindi: 1:23:45`)
 - Saniyeler kapatılabilir: o zaman saat:dakika gösterilir (`İkindi: 1:23`), son 5 dakikada yine saniye akar (`0:04:59`)
-- Tıklayınca saniyeli geri sayım ve günün tüm vakitleri (İmsak, Güneş, Öğle, İkindi, Akşam, Yatsı), sıradaki vurgulu
+- Tıklayınca saniyeli geri sayım ve günün tüm vakitleri (İmsak, Güneş, Öğle, İkindi, Akşam, Yatsı), sıradaki vurgulu; Yatsı'dan sonra yarının vakitleri
 - **Ülke → şehir → ilçe** seçimi (Diyanet verisi)
 - **Türkçe / English** arayüz
 - İsteğe bağlı kısaltılmış vakit adları (`İkn: 1:23:45`)
@@ -116,7 +116,7 @@ Asr: 1:23:45
 
 - Next prayer and a live countdown in the menu bar (`Asr: 1:23:45`)
 - Seconds can be turned off: it then shows hours:minutes (`Asr: 1:23`), with seconds only in the last 5 minutes (`0:04:59`)
-- Click it for a to-the-second countdown and today's full schedule, with the next prayer highlighted
+- Click it for a to-the-second countdown and today's full schedule, with the next prayer highlighted (after Isha it switches to tomorrow's)
 - Country → city → district picker, using official Diyanet (Presidency of Religious Affairs, Türkiye) times
 - Turkish / English interface (Settings → General)
 - Optional abbreviated names, launch at login

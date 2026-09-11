@@ -23,7 +23,12 @@ struct ContentView: View {
 
             if !manager.todayRows.isEmpty {
                 Divider()
-                VStack(spacing: 4) {
+                VStack(alignment: .leading, spacing: 4) {
+                    if manager.listIsTomorrow {
+                        Text(loc("Yarın", "Tomorrow"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                     ForEach(manager.todayRows, id: \.name) { row in
                         HStack {
                             Text(row.name)
