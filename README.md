@@ -1,37 +1,53 @@
-# Namaz Vakti — macOS Menü Bar Uygulaması
+# Namaz Vakti
 
-macOS menü barında **bir sonraki namaz vaktine kalan süreyi** canlı geri sayımla gösteren, Dock'ta görünmeyen küçük bir uygulama. Vakitler **[EzanVakti API](https://ezanvakti.emushaf.net/)** üzerinden alınır (Diyanet İşleri Başkanlığı verisi) — **kayıt / giriş / API anahtarı gerekmez.**
+macOS menü barında bir sonraki namaz vaktine kalan süreyi gösteren sade bir uygulama. Pencere yok, Dock ikonu yok, bildirim yok. Menü barında sadece şu var:
+
+```
+İkindi: 1:23:45
+```
+
+*English below.*
 
 ## Özellikler
 
-- Menü barında `🌙 İkindi 1:23:45` gibi sıradaki vakit + geri sayım
-- Tıklayınca bugünün tüm vakitleri (İmsak, Güneş, Öğle, İkindi, Akşam, Yatsı), sıradaki vurgulu
-- Ayarlardan **ülke → şehir → ilçe** seçimi (API'den canlı gelir)
-- **Türkçe / English** arayüz: Ayarlar'daki Dil bölümünden seçilir, varsayılan Türkçe. İngilizcede vakit adları Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha olur; yer adları API'nin İngilizce karşılıklarıyla gösterilir.
-- Aylık vakitler **diske cache**'lenir; internetsizken de geri sayım çalışır
-- Dock ikonu yok (menü bar agent'ı, `LSUIElement`)
-- Ayarlardan **Girişte başlat** (macOS giriş öğesi, `SMAppService`)
-- Kendi ikonu var (gece mavisi zemin, altın hilal). İkon `Scripts/make_icon.swift` ile kodla çizilir.
+- Menü barında sıradaki vakit ve canlı geri sayım
+- Tıklayınca günün tüm vakitleri (İmsak, Güneş, Öğle, İkindi, Akşam, Yatsı), sıradaki vurgulu
+- **Ülke → şehir → ilçe** seçimi (Diyanet verisi)
+- **Türkçe / English** arayüz
+- İsteğe bağlı kısaltılmış vakit adları (`İkn: 1:23:45`)
+- Girişte başlat
+- Aylık vakitler diske kaydedilir, internet yokken de geri sayım çalışır
+- Hesap, kayıt, API anahtarı yok
 
-## Derleme & Çalıştırma
+## Kurulum
+
+### Hazır DMG
+
+[Releases](https://github.com/fatihtemiz/namaz-vakti-menubar/releases) sayfasından son DMG'yi indirin ve uygulamayı **Applications** klasörüne sürükleyin.
+
+Uygulama Apple Developer ID ile imzalı ve notarize edilmiş değil, bu yüzden macOS ilk açılışı engeller. Bir kez izin vermeniz yeterli: **Sistem Ayarları → Gizlilik ve Güvenlik → Yine de Aç**.
+
+### Kaynaktan derleme
+
+Gerekenler: macOS 14+, Xcode Komut Satırı Araçları (Swift 6).
 
 ```bash
-cd ~/Desktop/NamazVaktiMenuBar
-./build_app.sh            # NamazVakti.app + dist/NamazVakti-<sürüm>.dmg üretir
-./build_app.sh install    # ayrıca ~/Applications'a kurar ve yeniden başlatır
+git clone https://github.com/fatihtemiz/namaz-vakti-menubar.git
+cd namaz-vakti-menubar
+./build_app.sh install
 ```
 
-Geliştirme sırasında hızlı çalıştırmak için: `swift run`
-
-### Başkalarıyla paylaşma
-
-`dist/` altındaki DMG'yi gönderin. Açan kişi uygulamayı **Applications** klasörüne sürükler. Uygulama Developer ID ile imzalı ve notarize edilmiş olmadığı için ilk açılışta macOS engeller: **Sistem Ayarları → Gizlilik ve Güvenlik → "Yine de Aç"** ile bir kez izin verilir.
+`./build_app.sh` tek başına `NamazVakti.app` ve `dist/` altına bir DMG üretir. `install` ile ayrıca `~/Applications`'a kurar ve başlatır. Geliştirirken hızlı çalıştırmak için: `swift run`.
 
 ## Kullanım
 
-1. Menü barındaki `🌙 Ayarla…` ögesine tıklayın → **Ayarlar**.
-2. Ülke / Şehir / İlçe seçip **Kaydet**.
-3. Vakitler çekilir, geri sayım başlar. Hepsi bu — hesap gerekmez.
+1. Menü barındaki `Ayarla…` yazısına tıklayın ve **Ayarlar**'ı açın.
+2. Ülke / Şehir / İlçe seçip **Kaydet**'e basın.
+3. Vakitler çekilir, geri sayım başlar.
+
+## Veri kaynağı
+
+Vakitler **[EzanVakti API](https://ezanvakti.emushaf.net/)** üzerinden alınır (Diyanet İşleri Başkanlığı verisi). Bu servis bu projeye ait değildir; gönüllü olarak işletilen, kimlik doğrulama gerektirmeyen bir servistir. Uygulama ayda bir istek atar ve sonucu saklar. Servis kapanırsa uygulama yeni vakit alamaz.
 
 ## Mimari
 
@@ -40,21 +56,57 @@ Geliştirme sırasında hızlı çalıştırmak için: `swift run`
 | `NamazVaktiApp.swift` | `MenuBarExtra` sahnesi + accessory (Dock'suz) politika |
 | `PrayerTimesManager.swift` | Cache, 1 sn'lik geri sayım timer'ı, sıradaki vakit hesabı |
 | `EzanVaktiAPI.swift` | EzanVakti REST istemcisi (auth yok) |
-| `Models.swift` | API modelleri + diske cache modeli |
-| `ContentView.swift` | Menü bar açılır paneli |
-| `SettingsView.swift` | Dil ve ülke/şehir/ilçe seçimi |
+| `Models.swift` | API modelleri, vakit adları, diske cache modeli |
 | `Localization.swift` | `AppLanguage` + `loc("Türkçe", "English")` yardımcısı |
+| `ContentView.swift` | Menü bar açılır paneli |
+| `SettingsView.swift` | Dil, girişte başlat ve ülke/şehir/ilçe seçimi |
+| `Scripts/make_icon.swift` | Uygulama ikonunu kodla çizer, build sırasında `.icns` olur |
 
 ### API uçları (hepsi GET, kimlik doğrulama yok)
 
-- `ulkeler` → `{ UlkeAdi, UlkeID }`
-- `sehirler/{UlkeID}` → `{ SehirAdi, SehirID }`
-- `ilceler/{SehirID}` → `{ IlceAdi, IlceID }`
+- `ulkeler` → `{ UlkeAdi, UlkeAdiEn, UlkeID }`
+- `sehirler/{UlkeID}` → `{ SehirAdi, SehirAdiEn, SehirID }`
+- `ilceler/{SehirID}` → `{ IlceAdi, IlceAdiEn, IlceID }`
 - `vakitler/{IlceID}` → aylık liste: `{ Imsak, Gunes, Ogle, Ikindi, Aksam, Yatsi, MiladiTarihKisaIso8601, … }`
 
 ## Notlar / bilinen sınırlar
 
-- Vakitler ve `MiladiTarihUzunIso8601` **Türkiye saat dilimine** göredir; Mac'iniz farklı saat dilimindeyse geri sayım kayabilir (Türkiye'de sorun olmaz).
-- İnternet yokken son cache'lenen ay üzerinden geri sayım çalışmaya devam eder.
-- `vakitler` uçları içinde bulunulan **ayı** döndürür; uygulama gün dönümü/ay sonunda otomatik yeniden çeker.
-- Uygulama ad-hoc imzalıdır; ilk açılışta Gatekeeper uyarısı çıkarsa sağ tık → **Aç**.
+- Vakitler seçilen ilçenin yerel saatidir; geri sayım Mac'inizin aynı saat diliminde olduğunu varsayar.
+- İnternet yokken son kaydedilen ay üzerinden geri sayım çalışmaya devam eder.
+- `vakitler` ucu içinde bulunulan **ayı** döndürür; uygulama gün dönümünde ve ay sonunda otomatik yeniden çeker.
+
+## Lisans
+
+MIT, bkz. [LICENSE](LICENSE).
+
+---
+
+## English
+
+A minimal macOS menu bar app that shows the time left until the next prayer. No window, no Dock icon, no notifications. Just this in your menu bar:
+
+```
+Asr: 1:23:45
+```
+
+- Next prayer and a live countdown in the menu bar
+- Click it for today's full schedule, with the next prayer highlighted
+- Country → city → district picker, using official Diyanet (Presidency of Religious Affairs, Türkiye) times
+- Turkish / English interface (Settings → General)
+- Optional abbreviated names, launch at login
+- Monthly times are cached on disk, so the countdown keeps working offline
+- No account, no sign-up, no API key
+
+**Install:** download the DMG from [Releases](https://github.com/fatihtemiz/namaz-vakti-menubar/releases) and drag the app into Applications. The app is not notarized, so macOS blocks the first launch; allow it once in **System Settings → Privacy & Security → Open Anyway**.
+
+**Build from source** (macOS 14+, Swift 6):
+
+```bash
+git clone https://github.com/fatihtemiz/namaz-vakti-menubar.git
+cd namaz-vakti-menubar
+./build_app.sh install
+```
+
+**Data:** prayer times come from the community-run [EzanVakti API](https://ezanvakti.emushaf.net/), which serves Diyanet data. It is not affiliated with this project. Times are the selected district's local times; the countdown assumes your Mac is in the same time zone.
+
+**License:** MIT
