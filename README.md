@@ -39,6 +39,18 @@ cd namaz-vakti-menubar
 
 `./build_app.sh` tek başına `NamazVakti.app` ve `dist/` altına bir DMG üretir. `install` ile ayrıca `~/Applications`'a kurar ve başlatır. Geliştirirken hızlı çalıştırmak için: `swift run`.
 
+### İmzalama ve notarize (geliştirici için)
+
+Build betiği anahtar zincirinde bir **Developer ID Application** sertifikası bulursa uygulamayı onunla imzalar. `namazvakti-notary` adlı bir notarytool profili de varsa uygulamayı ve DMG'yi Apple'a notarize ettirip onay damgasını ekler. İkisi de yoksa ad-hoc imzalar. Bir kerelik kurulum (ücretli Apple Developer üyeliği gerekir):
+
+1. Xcode → Settings → Accounts → takımınız → **Manage Certificates** → **+** → **Developer ID Application**
+2. [account.apple.com](https://account.apple.com) → Oturum Açma ve Güvenlik → **Uygulamaya Özel Parolalar** → yeni parola oluşturun
+3. Profili kaydedin (parolayı sorar, anahtar zincirine yazar):
+
+```bash
+xcrun notarytool store-credentials namazvakti-notary --apple-id <apple-id-e-postanız> --team-id <TEAM_ID>
+```
+
 ## Kullanım
 
 1. Menü barındaki `Ayarla…` yazısına tıklayın ve **Ayarlar**'ı açın.

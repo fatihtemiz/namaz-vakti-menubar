@@ -74,8 +74,43 @@ cat > "$APP_BUNDLE/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
-# Ad-hoc imzala (Keychain erişimi ve gatekeeper için).
-codesign --force --deep --sign - "$APP_BUNDLE" >/dev/null 2>&1 || true
+# İmzalama: "Developer ID Application" sertifikası varsa onunla (hardened runtime + zaman damgası),
+# yoksa ad-hoc. Notarize için anahtar zincirinde notarytool profili gerekir (README > Notarize).
+NOTARY_PROFILE="${NOTARY_PROFILE:-namazvakti-notary}"
+SIGN_ID="$(security find-identity -v -p codesigning | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -1)"
+CAN_NOTARIZE=0
+if [ -n "$SIGN_ID" ]; then
+    echo "▸ İmzalanıyor: $SIGN_ID"
+    codesign --force --options runtime --timestamp --sign "$SIGN_ID" "$APP_BUNDLE"
+    if xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1; then
+        CAN_NOTARIZE=1
+    else
+        echo "  Notarize atlanacak: '$NOTARY_PROFILE' profili bulunamadı."
+    fi
+else
+    echo "▸ Developer ID bulunamadı, ad-hoc imzalanıyor (DMG'yi açanlar Gatekeeper uyarısı görür)."
+    codesign --force --sign - "$APP_BUNDLE" >/dev/null 2>&1 || true
+fi
+
+# Dosyayı Apple'a gönderir, sonucu bekler; "Accepted" değilse durur.
+notarize() {
+    local out
+    out="$(xcrun notarytool submit "$1" --keychain-profile "$NOTARY_PROFILE" --wait 2>&1)" || true
+    echo "$out" | grep -E "id:|status:" | tail -2
+    if ! echo "$out" | grep -q "status: Accepted"; then
+        echo "✗ Notarize başarısız. Ayrıntı: xcrun notarytool log <id> --keychain-profile $NOTARY_PROFILE"
+        exit 1
+    fi
+}
+
+if [ "$CAN_NOTARIZE" = 1 ]; then
+    echo "▸ Uygulama notarize ediliyor (birkaç dakika sürebilir)…"
+    ZIP_DIR="$(mktemp -d)"
+    ditto -c -k --keepParent "$APP_BUNDLE" "$ZIP_DIR/$APP_NAME.zip"
+    notarize "$ZIP_DIR/$APP_NAME.zip"
+    rm -rf "$ZIP_DIR"
+    xcrun stapler staple -q "$APP_BUNDLE"
+fi
 
 echo "▸ DMG hazırlanıyor…"
 mkdir -p dist
@@ -84,6 +119,16 @@ cp -R "$APP_BUNDLE" "$STAGING/"
 ln -s /Applications "$STAGING/Applications"
 hdiutil create -volname "Namaz Vakti" -srcfolder "$STAGING" -ov -format UDZO "$DMG" >/dev/null
 rm -rf "$STAGING"
+
+if [ -n "$SIGN_ID" ]; then
+    codesign --force --timestamp --sign "$SIGN_ID" "$DMG"
+fi
+if [ "$CAN_NOTARIZE" = 1 ]; then
+    echo "▸ DMG notarize ediliyor…"
+    notarize "$DMG"
+    xcrun stapler staple -q "$DMG"
+    echo "✓ Notarize edildi, Gatekeeper uyarısı çıkmaz."
+fi
 
 echo "✓ Hazır: $(pwd)/$APP_BUNDLE"
 echo "✓ DMG:   $(pwd)/$DMG"
