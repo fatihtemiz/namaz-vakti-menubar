@@ -1,0 +1,204 @@
+import Foundation
+import SwiftUI
+
+@MainActor
+final class PrayerTimesManager: ObservableObject {
+    // Ayarlar — seçilen ilçe
+    @AppStorage("cityId") var cityId: Int = 0
+    @AppStorage("cityName") var cityName: String = ""
+    // Vakit adlarını kısaltarak göster (ör. "İkindi" → "İkn")
+    @AppStorage("useAbbreviations") var useAbbreviations: Bool = false {
+        didSet { recompute() }
+    }
+
+    static let abbreviations: [String: String] = [
+        "İmsak": "İms", "Güneş": "Gün", "Öğle": "Öğl",
+        "İkindi": "İkn", "Akşam": "Akş", "Yatsı": "Yat",
+    ]
+
+    private func displayName(_ name: String) -> String {
+        useAbbreviations ? (Self.abbreviations[name] ?? name) : name
+    }
+
+    // Menü barında görünen kısa metin, ör. "İkindi 1:23:45"
+    @Published var menuTitle: String = "Namaz Vakti"
+    // Popover durumu
+    @Published var nextName: String = ""
+    @Published var nextTime: String = ""
+    @Published var remaining: String = ""
+    @Published var todayRows: [(name: String, time: String, isNext: Bool)] = []
+    @Published var status: String = ""
+    @Published var isLoading: Bool = false
+
+    private var cache: CachedTimes?
+    private var tickTimer: Timer?
+    private var maintenanceTimer: Timer?
+    private let api = EzanVaktiAPI()
+
+    var isConfigured: Bool { cityId != 0 }
+
+    // MARK: Lifecycle
+
+    func start() {
+        cache = Self.loadCache()
+        recompute()
+
+        tickTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.recompute() }
+        }
+        // Cache tazeliğini periyodik kontrol et (gün dönümü / ay bitişi için).
+        maintenanceTimer = Timer.scheduledTimer(withTimeInterval: 1800, repeats: true) { [weak self] _ in
+            Task { @MainActor in await self?.ensureFreshData() }
+        }
+        Task { await ensureFreshData() }
+    }
+
+    // MARK: Veri tazeliği
+
+    /// Cache yarını kapsamıyorsa veya şehir değiştiyse yeniden çek.
+    func ensureFreshData() async {
+        guard isConfigured else {
+            if menuTitle == "Namaz Vakti" { menuTitle = "Ayarla…" }
+            return
+        }
+        let cal = Calendar.current
+        let tomorrow = cal.startOfDay(for: cal.date(byAdding: .day, value: 1, to: Date())!)
+        let coversTomorrow = cache?.days.contains {
+            ($0.day.map { cal.startOfDay(for: $0) }) == tomorrow
+        } ?? false
+        let sameCity = cache?.cityId == cityId
+        if coversTomorrow && sameCity { return }
+        await refresh()
+    }
+
+    /// API'den ayı çek ve cache'le.
+    func refresh() async {
+        guard isConfigured else {
+            status = "Önce ayarlardan şehir/ilçe seçin."
+            return
+        }
+        isLoading = true
+        status = "Vakitler alınıyor…"
+        defer { isLoading = false }
+        do {
+            let days = try await api.prayerTimes(districtId: cityId)
+            let cached = CachedTimes(
+                cityId: cityId,
+                cityName: cityName,
+                fetchedAt: Date(),
+                days: days.compactMap { Self.toCachedDay($0) }
+            )
+            self.cache = cached
+            Self.saveCache(cached)
+            status = ""
+            recompute()
+        } catch {
+            status = "Hata: \(error.localizedDescription)"
+        }
+    }
+
+    // MARK: Geri sayım hesabı
+
+    private func recompute() {
+        guard let cache, !cache.days.isEmpty else {
+            todayRows = []
+            if isConfigured {
+                menuTitle = isLoading ? "Yükleniyor…" : "Namaz Vakti"
+            } else {
+                menuTitle = "Ayarla…"
+            }
+            return
+        }
+
+        let now = Date()
+        let cal = Calendar.current
+
+        // Tüm günlerin tüm vakitlerini tam Date olarak düzleştir.
+        var events: [(name: String, date: Date)] = []
+        for day in cache.days {
+            guard let base = day.day else { continue }
+            for v in day.vakitler {
+                if let d = Self.combine(day: base, time: v.time, calendar: cal) {
+                    events.append((v.name, d))
+                }
+            }
+        }
+        events.sort { $0.date < $1.date }
+
+        guard let next = events.first(where: { $0.date > now }) else {
+            menuTitle = cache.cityName.isEmpty ? "Namaz Vakti" : cache.cityName
+            return
+        }
+
+        nextName = displayName(next.name)
+        nextTime = Self.hhmm.string(from: next.date)
+        let interval = next.date.timeIntervalSince(now)
+        remaining = Self.formatRemaining(interval)
+        menuTitle = "\(displayName(next.name)): \(remaining)"
+
+        // Bugünün satırları — sıradaki vakti işaretle.
+        let today = cal.startOfDay(for: now)
+        if let todayDay = cache.days.first(where: { $0.day.map { cal.startOfDay(for: $0) } == today }) {
+            todayRows = todayDay.vakitler.map { v in
+                (displayName(v.name), v.time, v.name == next.name && cal.isDate(next.date, inSameDayAs: now))
+            }
+        }
+    }
+
+    // MARK: Yardımcılar
+
+    private static func combine(day: Date, time: String, calendar: Calendar) -> Date? {
+        let parts = time.split(separator: ":")
+        guard parts.count == 2, let h = Int(parts[0]), let m = Int(parts[1]) else { return nil }
+        var dc = calendar.dateComponents([.year, .month, .day], from: day)
+        dc.hour = h
+        dc.minute = m
+        return calendar.date(from: dc)
+    }
+
+    private static func formatRemaining(_ interval: TimeInterval) -> String {
+        let total = max(0, Int(interval.rounded()))
+        let h = total / 3600
+        let m = (total % 3600) / 60
+        let s = total % 60
+        if h > 0 {
+            return String(format: "%d:%02d:%02d", h, m, s)
+        }
+        return String(format: "%02d:%02d", m, s)
+    }
+
+    private static let hhmm: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm"
+        return f
+    }()
+
+    private static func toCachedDay(_ d: PrayerDay) -> CachedDay? {
+        guard let day = d.day else { return nil }
+        return CachedDay(
+            dateISO: PrayerDay.isoDateFormatter.string(from: day),
+            imsak: d.imsak, gunes: d.gunes, ogle: d.ogle,
+            ikindi: d.ikindi, aksam: d.aksam, yatsi: d.yatsi
+        )
+    }
+
+    // MARK: Cache (Application Support)
+
+    private static var cacheURL: URL {
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("NamazVaktiMenuBar", isDirectory: true)
+        try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        return base.appendingPathComponent("prayertimes.json")
+    }
+
+    private static func loadCache() -> CachedTimes? {
+        guard let data = try? Data(contentsOf: cacheURL) else { return nil }
+        return try? JSONDecoder().decode(CachedTimes.self, from: data)
+    }
+
+    private static func saveCache(_ c: CachedTimes) {
+        if let data = try? JSONEncoder().encode(c) {
+            try? data.write(to: cacheURL, options: .atomic)
+        }
+    }
+}
